@@ -1,0 +1,172 @@
+;    Time-Series Data Format (TSDF) Syntax Specification
+;    ---------------------------------------------------
+;      Tom Kopley
+;      Palo Alto, CA  
+;      tkopley@yahoo.com
+;
+;
+; This is the change log for Time-Series Data Format (TSDF)
+; in Backus-Naur Form.  
+;
+; ------------
+; Changes List
+; ------------
+;
+; --------------------
+; Version 0.7 Changes (March 1, 2020)
+; -------------------
+;  1. Added support for monitor parameters calculated from other parameters or
+;        extracted from IV curves in the mdef file
+;  2. Added a common rule for an algebraic expression, including 'max', 'min',
+;        and 'diff' (deriva$ive) functions to support #1.
+;  3. Added sampling rate of real time stress data that is saved only
+;        periodically to limit data file size.  Suggest it is entered in the
+;        miscinfo file via a comment in the miscfile comment section
+;  4. Modified the <cumulative_stress_time> field in the sessioninfo file:
+;        for datasets with different cumulative stress times for each DUT,
+;        report min, max, and median cumulative stress times for the entire
+;        set of cumulative stress times.  Add comments to explain this.
+;  5. In ivdat, add more explicit wording that the time point in the iv curve
+;        header info is the time index found in the mtimes file
+;  6. Created a new set of minimum TSDF files: sessioninfo, mtimes, ivdat to
+;        allow a dataset with only IV curves.
+;  7. Moved file path rules to the Common Rules Section
+;  8. Added a waferinfo file with fields to hold notch location, (x,y) origin,
+;        an optional path to a wafermap file, and optional matrix to 
+;        cross-reference waferscribe to logical wafer number.  Set waferscribe
+;        rule to <alphanumeric>+ -> may need to modify this if other chars are
+;        used in wafer scribes.
+;  9. Added more thoughts in the Limitations section in the paragraphs on
+;        supporting read point testing and supporting analysis of TSDF datasets.
+;        I have ideas...
+;
+; --------------------
+; Version 0.6.1 Changes (May 20, 2019)
+; -------------------
+;  1. Added <tsdf_version> entry in sessioninfo file
+;  2. Added explanation for <comment> in sessioninfo file Notes
+;  3. Added explanation for <tsdf_version> in sessioninfo file Notes
+;  4. Added a section after the "Limitations" section called
+;        "Pratical Issues" and containing suggestions for a
+;        TSDF extras file to allow supplementary metadata that does not exist
+;        within the raw data files coming from the tester.
+;
+; --------------------
+; Version 0.6 Changes (April 27, 2019)
+; -------------------
+;  0. Changed my location to Palo Alto, CA in this file and the BNF spec file.
+;  1. Added '"#" [<whitespace>]' at beginning of <format> definition in ivdat file.
+;       This was an error in the original spec.
+;  2. Added a miscinfo file to contain extra fields of metadata that could 
+;       vary from lab to lab or company to company. The description includes
+;       some typical fields (e.g. <job_number>, <test_program>, etc) that could
+;       be used.
+;  3. Added a paragraph in the Introduction section of the spec file explaining
+;       the miscinfo file's contents and how it fits in with the larger context
+;       of a lab's database infrastructure.
+;  4. Removed <request> from sessioninfo file, will put this into the miscinfo 
+;       file
+;  5. Removed <reports_list> from the sessioninfo file
+;  6. Added <lab> to sessioninfo file
+;  7. In devinfo, changed <structure_number> to <structure> and the definition
+;       to allow either digits (for structure number) or alphanumerics (for a
+;       structure name)
+;  8. In devinfo, added a <dev_index> column and explanatory note
+;  9. In each *dat file (mdat, sdat, predat, postdat): Added "dev_index" to the 
+;       column names and <dev_index> to each data row
+; 10. In the ivdat file, changed the definition of <device_id_line> to contain
+;       <dev_info> instead of <digit>+
+; 11. Changed <padding_data> to "44e44" and <bad_data> to "21e21" to make them
+;       less likely to coincide with real data of the same value from a tester.
+; 12. In mdat and sdat comments, noted that format="device" is the easiest to 
+;       parse for plotting degradation curves.
+; 13. In mdat and sdat comments, noted that format="time" is the easiest to 
+;       parse for plotting boxplots or distributions of a given monitor time.
+; 14. In mdat and sdat comments, noted that wafer level testing could include
+;       multiple test_types so conversion or direct output from the test system
+;       would have to create multiple TSDF stress sessions.
+; 15. Inf ivdat, created <iv_header_line> definition, which was being referenced
+;       in the ivdat comments section, but did not exist.
+; 16. In ivdat file, added <sweep_rate> to <header_line_short> and <header_line_long>
+;       definitions.  This is to support capture of a Vramp or Jramp rate.
+; 17. Noticed there are many definitions of <header_line>, one for most files.  
+;       Changed these names to make them unique for each file.
+; 18. In ivdat file, added optional indices to t=prestress and t=postress, so
+;       for example, t=prestress0, t=prestress1, t=prestress2 would all be valid time
+;       intervals for prestress curves.  TSDF does not specify how the ordering
+;       of indices should occur, it essentially uses the time interval as a label.
+;       Details of the IV curve would be put in the <description_line>.
+; 19. In the Limitations section, added subsections on TSDF not being a true 
+;       database, and that TSDF does not support incorporation of data analysis
+;       (at this time).
+;
+; --------------------
+; Version 0.5 Changes (September 25, 2014)
+; -------------------
+;  1. Added new files: predef, predat, postdef, and postdat
+;      predef and postdef have the exact same format as mdef; predat and
+;      postdat have the same format as mdat, except since they are a single
+;      time point (pre-stress or post-stress), there is no <data_order>
+;      variable to the files.  Data is presented for device #1 through #L
+;      on separate lines.
+;  2. Added predat and postdat entries into sessioninfo.  Values will be
+;      the same as the IV Curves entry, i.e. "yes" or "no", (case
+;      insensitive).
+;
+; --------------------
+; Version 0.4 Changes (April 30, 2014)
+; -------------------
+;  1. Added new file: stimes
+;  2. Added second ivdat format that adds independent variable columns, that
+;      is, sweep and step values, replacing the header line information with
+;      explicit values.
+;  3. Added to the Introduction section the minimum set of files that
+;      would make a stress session a "valid" TSDF dataset.
+;  4. Added a section listing the requirements of an analysis program to be
+;     considered TSDF-compliant.
+;
+; --------------------
+; Version 0.3 Changes (April 21, 2014)
+; -------------------
+;  1. Added new Common Rule <number_list>
+;  2. Modified ivdat <sweep_values> to be a number list in Matlab format,
+;       enclosed in brackets ([]).  This is to support IV curves with
+;       sweep and step ranges than may have multiple step values.
+;  3. Edited notes in ivdat to be consistent with the new <sweep_values>
+;       and added examples of <sweep_values>.
+;  4. Added <request> and <probecard> fields to session info
+;  5. Fixed dataa typo in <data_order> in sdat file notes.
+;
+; --------------------
+; Version 0.2 Changes
+; -------------------
+;  1. Added Route field to devinfo
+;  2. added PC drive designation in sesssioninfo
+;  3. Added example of using a random string for session name in Notes on
+;        sessioninfo
+;  4. Added HTRB and HTGB to the list of possible <test_type> values
+;  5. Added use of quotes ("") in "Other notation used" section
+;  6. Changed <raw_data_format> to "TSDF" from "Direct Write" for situations
+;        in which test systems write TSDF directly
+;  7. Modified the notes on <monitor_parameters> in sessioninfo
+;  8. Added notes on <data_order> in mdat and sdat file notes
+;  9. Added "but highly recommended" in <description_line> in ivdat notes
+; 10. Rewrote <header_line> in ivdat notes to be more clear
+; 
+;
+;
+; --------------------
+; Version 0.4 Changes (April 30, 2014)
+; -------------------
+;  1. Added new file: stimes
+;  2. Added second ivdat format that adds independent variable columns, that
+;      is, sweep and step values, replacing the header line information with
+;      explicit values.
+;  3. Added to the Introduction section the minimum set of files that
+;      would make a stress session a "valid" TSDF dataset.
+;  4. Added a section listing the requirements of an analysis program to be
+;     considered TSDF-compliant.
+;
+; --------------------
+; Preliminary Version: this is the first version of tsdf_bnf_spec.txt
+; --------------------
